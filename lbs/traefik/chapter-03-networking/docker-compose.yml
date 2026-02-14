@@ -1,0 +1,215 @@
+version: "3.8"
+
+# =============================================================================
+# Chapter 03: Internal vs External Networks
+# =============================================================================
+# This setup demonstrates:
+# - External networks (accessible from host)
+# - Internal networks (container-to-container only)
+# - Backend networks (isolated from Traefik)
+# - How Traefik bridges network boundaries
+# =============================================================================
+
+services:
+  # ---------------------------------------------------------------------------
+  # Traefik - Network Bridge
+  # ---------------------------------------------------------------------------
+  # Traefik sits on BOTH external and internal networks
+  # This allows it to receive traffic from outside and route to internal services
+  traefik:
+    image: traefik:v3.0
+    container_name: traefik-networks
+    command:
+      - "--api.dashboard=true"
+      - "--api.insecure=true"
+      - "--entrypoints.web.address=:80"
+      - "--providers.docker=true"
+      - "--providers.docker.exposedbydefault=false"
+      # Important: Specify which network to use for backend connections
+      - "--providers.docker.network=traefik-internal"
+      - "--log.level=DEBUG"
+      - "--accesslog=true"
+      - "--accesslog.format=json"
+
+    ports:
+      - "80:80"
+      - "8080:8080"
+
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+
+    # KEY: Traefik connects to BOTH networks
+    networks:
+      - traefik-external   # Receives incoming traffic
+      - traefik-internal   # Routes to backend services
+
+  # ---------------------------------------------------------------------------
+  # PUBLIC TIER - Web Frontend
+  # ---------------------------------------------------------------------------
+  # Accessible via Traefik, serves the frontend
+  app-web:
+    build:
+      context: ../app
+      dockerfile: Dockerfile
+    container_name: app-web
+    hostname: app-web
+    environment:
+      - INSTANCE_ID=web-frontend
+      - INSTANCE_COLOR=#3498db
+    networks:
+      - traefik-internal   # Can be reached by Traefik
+      - backend-network    # Can reach backend services
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.web.rule=Host(`localhost`) && PathPrefix(`/`)"
+      - "traefik.http.routers.web.priority=1"
+      - "traefik.http.routers.web.entrypoints=web"
+      - "traefik.http.services.web.loadbalancer.server.port=5000"
+      - "traefik.docker.network=traefik-internal"
+
+  # ---------------------------------------------------------------------------
+  # API TIER - Backend API
+  # ---------------------------------------------------------------------------
+  # Accessible via Traefik at /api path
+  app-api:
+    build:
+      context: ../app
+      dockerfile: Dockerfile
+    container_name: app-api
+    hostname: app-api
+    environment:
+      - INSTANCE_ID=api-service
+      - INSTANCE_COLOR=#2ecc71
+    networks:
+      - traefik-internal   # Can be reached by Traefik
+      - backend-network    # Can reach database
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.api.rule=Host(`localhost`) && PathPrefix(`/api`)"
+      - "traefik.http.routers.api.priority=2"
+      - "traefik.http.routers.api.entrypoints=web"
+      - "traefik.http.services.api.loadbalancer.server.port=5000"
+      # Strip /api prefix before forwarding
+      - "traefik.http.routers.api.middlewares=api-stripprefix"
+      - "traefik.http.middlewares.api-stripprefix.stripprefix.prefixes=/api"
+      - "traefik.docker.network=traefik-internal"
+
+  # ---------------------------------------------------------------------------
+  # ADMIN TIER - Admin Panel
+  # ---------------------------------------------------------------------------
+  # Accessible via Traefik at admin.localhost
+  app-admin:
+    build:
+      context: ../app
+      dockerfile: Dockerfile
+    container_name: app-admin
+    hostname: app-admin
+    environment:
+      - INSTANCE_ID=admin-panel
+      - INSTANCE_COLOR=#e74c3c
+    networks:
+      - traefik-internal
+      - backend-network
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.admin.rule=Host(`admin.localhost`)"
+      - "traefik.http.routers.admin.entrypoints=web"
+      - "traefik.http.services.admin.loadbalancer.server.port=5000"
+      - "traefik.docker.network=traefik-internal"
+
+  # ---------------------------------------------------------------------------
+  # BACKEND TIER - Database (Isolated)
+  # ---------------------------------------------------------------------------
+  # NOT accessible via Traefik - only from internal services
+  db:
+    image: postgres:15-alpine
+    container_name: db
+    hostname: db
+    environment:
+      - POSTGRES_USER=app
+      - POSTGRES_PASSWORD=secret
+      - POSTGRES_DB=appdb
+    networks:
+      - backend-network    # ONLY on backend network
+    # No Traefik labels - completely isolated from external access
+    # No ports exposed - only accessible from same network
+
+  # ---------------------------------------------------------------------------
+  # BACKEND TIER - Cache (Isolated)
+  # ---------------------------------------------------------------------------
+  # NOT accessible via Traefik - only from internal services
+  redis:
+    image: redis:7-alpine
+    container_name: redis
+    hostname: redis
+    networks:
+      - backend-network    # ONLY on backend network
+    # No Traefik labels - completely isolated
+    # No ports exposed
+
+  # ---------------------------------------------------------------------------
+  # WORKER TIER - Background Workers (Isolated)
+  # ---------------------------------------------------------------------------
+  # These workers process background jobs
+  # NOT accessible via Traefik at all
+  worker-1:
+    build:
+      context: ../app
+      dockerfile: Dockerfile
+    container_name: worker-1
+    hostname: worker-1
+    environment:
+      - INSTANCE_ID=worker-1
+      - INSTANCE_COLOR=#95a5a6
+    networks:
+      - backend-network    # Only talks to Redis/DB
+    # No Traefik labels - not web-accessible
+
+  worker-2:
+    build:
+      context: ../app
+      dockerfile: Dockerfile
+    container_name: worker-2
+    hostname: worker-2
+    environment:
+      - INSTANCE_ID=worker-2
+      - INSTANCE_COLOR=#7f8c8d
+    networks:
+      - backend-network
+    # No Traefik labels
+
+# =============================================================================
+# Network Definitions
+# =============================================================================
+
+networks:
+  # ---------------------------------------------------------------------------
+  # External Network
+  # ---------------------------------------------------------------------------
+  # This network is accessible from the host machine
+  # Traefik listens here for incoming requests
+  traefik-external:
+    name: traefik-external
+    driver: bridge
+    # Note: Not marked as internal, so it's accessible from host
+
+  # ---------------------------------------------------------------------------
+  # Internal Network
+  # ---------------------------------------------------------------------------
+  # This network is for Traefik to communicate with app services
+  # Services here can be reached by Traefik but not directly from host
+  traefik-internal:
+    name: traefik-internal
+    driver: bridge
+    internal: true  # KEY: Not accessible from host
+
+  # ---------------------------------------------------------------------------
+  # Backend Network
+  # ---------------------------------------------------------------------------
+  # Completely isolated network for backend services
+  # Traefik cannot access this network
+  # Only services explicitly connected can communicate
+  backend-network:
+    name: backend-network
+    driver: bridge
+    internal: true  # Isolated from host

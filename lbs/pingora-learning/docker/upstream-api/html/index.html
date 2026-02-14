@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Secondary Upstream Server</title>
+    <style>
+        body { font-family: system-ui, sans-serif; max-width: 600px; margin: 50px auto; padding: 20px; }
+        .server { background: #e3f2fd; padding: 20px; border-radius: 8px; }
+        code { background: #f5f5f5; padding: 2px 6px; border-radius: 4px; }
+    </style>
+</head>
+<body>
+    <div class="server">
+        <h1>Secondary Upstream Server</h1>
+        <p>You've reached the <strong>secondary</strong> backend server.</p>
+        <p>This is used for load balancing experiments.</p>
+    </div>
+
+    <h2>Test Endpoints</h2>
+    <ul>
+        <li><code>GET /</code> - This page</li>
+        <li><code>GET /health</code> - Health check</li>
+        <li><code>GET /api/</code> - JSON API response</li>
+    </ul>
+</body>
+</html>

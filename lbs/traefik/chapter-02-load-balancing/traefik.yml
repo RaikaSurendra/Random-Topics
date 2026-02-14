@@ -1,0 +1,30 @@
+# =============================================================================
+# Traefik Static Configuration
+# =============================================================================
+
+# API and Dashboard
+api:
+  dashboard: true
+  insecure: true
+
+# Entry Points
+entryPoints:
+  web:
+    address: ":80"
+
+# Providers
+providers:
+  file:
+    filename: /etc/traefik/dynamic.yml
+    watch: true
+
+# Logging
+log:
+  level: INFO
+
+accessLog:
+  format: json
+
+# Health check
+ping:
+  entryPoint: web

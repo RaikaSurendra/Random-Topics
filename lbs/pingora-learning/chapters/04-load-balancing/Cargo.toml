@@ -1,0 +1,10 @@
+[package]
+name = "load-balancing-proxy"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+pingora = { version = "0.7", features = ["proxy"] }
+async-trait = "0.1"
+tokio = { version = "1", features = ["full"] }
+rand = "0.8"

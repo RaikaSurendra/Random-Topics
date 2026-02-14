@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Primary Upstream Server</title>
+    <style>
+        body { font-family: system-ui, sans-serif; max-width: 600px; margin: 50px auto; padding: 20px; }
+        .server { background: #e8f5e9; padding: 20px; border-radius: 8px; }
+        code { background: #f5f5f5; padding: 2px 6px; border-radius: 4px; }
+    </style>
+</head>
+<body>
+    <div class="server">
+        <h1>Primary Upstream Server</h1>
+        <p>You've reached the <strong>primary</strong> backend server.</p>
+        <p>This request was proxied through Pingora!</p>
+    </div>
+
+    <h2>Test Endpoints</h2>
+    <ul>
+        <li><code>GET /</code> - This page</li>
+        <li><code>GET /health</code> - Health check</li>
+        <li><code>GET /api/</code> - JSON API response</li>
+    </ul>
+
+    <h2>Check Headers</h2>
+    <p>Use <code>curl -v http://localhost:6188</code> to see the headers added by Pingora.</p>
+</body>
+</html>

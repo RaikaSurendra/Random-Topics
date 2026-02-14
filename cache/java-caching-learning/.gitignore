@@ -1,0 +1,38 @@
+# Build output
+target/
+!.mvn/wrapper/maven-wrapper.jar
+
+# IDE
+.idea/
+*.iml
+.vscode/
+*.code-workspace
+.project
+.classpath
+.settings/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+logs/
+
+# Temporary files
+*.tmp
+*.swp
+*~
+
+# Environment
+.env
+.env.local
+.env.docker
+!.env.example
+
+# Docker volumes
+postgres_data/
+redis_data/
+rabbitmq_data/
+grafana_data/
+prometheus_data/

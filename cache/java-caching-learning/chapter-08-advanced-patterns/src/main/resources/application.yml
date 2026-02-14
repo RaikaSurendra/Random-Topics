@@ -1,0 +1,63 @@
+spring:
+  application:
+    name: chapter-08-advanced-patterns
+
+  datasource:
+    url: jdbc:postgresql://localhost:5432/caching_db
+    username: cache_user
+    password: cache_password
+    driver-class-name: org.postgresql.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    show-sql: false
+
+  data:
+    redis:
+      host: localhost
+      port: 6379
+
+# Cache warmer
+cache:
+  warmer:
+    enabled: true
+    count: 100
+    cron: "0 0 5 * * *"
+  version: v1
+
+# Hot key detection
+hotkey:
+  threshold: 100
+  window-seconds: 60
+
+# TTL jitter
+ttl:
+  base-seconds: 60
+  jitter-percent: 10
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,prometheus,metrics
+
+logging:
+  level:
+    com.learning.cache: DEBUG
+
+server:
+  port: 8088
+
+---
+spring:
+  config:
+    activate:
+      on-profile: docker
+
+  datasource:
+    url: jdbc:postgresql://postgres:5432/caching_db
+
+  data:
+    redis:
+      host: redis

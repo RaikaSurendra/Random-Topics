@@ -1,0 +1,65 @@
+spring:
+  application:
+    name: chapter-03-race-conditions
+
+  datasource:
+    url: jdbc:postgresql://localhost:5432/caching_db
+    username: cache_user
+    password: cache_password
+    driver-class-name: org.postgresql.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    show-sql: false
+
+  data:
+    redis:
+      host: localhost
+      port: 6379
+      timeout: 2000ms
+
+# Race condition configuration
+race-condition:
+  mutex:
+    wait-time: 5000      # Max time to wait for lock (ms)
+    lease-time: 30000    # Lock auto-release time (ms)
+
+  probabilistic:
+    beta: 1.0            # Refresh aggressiveness
+    delta: 5000          # Refresh window before expiration (ms)
+
+  coalescing:
+    timeout: 10000       # Max wait for in-flight request (ms)
+
+# Actuator endpoints
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,prometheus,metrics
+  endpoint:
+    health:
+      show-details: always
+
+# Logging
+logging:
+  level:
+    com.learning.cache: DEBUG
+
+server:
+  port: 8083
+
+---
+# Docker profile
+spring:
+  config:
+    activate:
+      on-profile: docker
+
+  datasource:
+    url: jdbc:postgresql://postgres:5432/caching_db
+
+  data:
+    redis:
+      host: redis

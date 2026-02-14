@@ -1,0 +1,36 @@
+# =============================================================================
+# Traefik Dynamic Configuration - Load Balancing 5 Nodes
+# =============================================================================
+
+http:
+  # Router
+  routers:
+    app-lb:
+      rule: "Host(`localhost`) || Host(`app.localhost`)"
+      entryPoints:
+        - web
+      service: app-lb
+
+  # Service with Load Balancing
+  services:
+    app-lb:
+      loadBalancer:
+        # Health check
+        healthCheck:
+          path: /health
+          interval: 5s
+          timeout: 2s
+
+        # Sticky sessions
+        sticky:
+          cookie:
+            name: SERVERID
+            httpOnly: true
+
+        # Backend servers (5 nodes)
+        servers:
+          - url: "http://app-node-1:5000"
+          - url: "http://app-node-2:5000"
+          - url: "http://app-node-3:5000"
+          - url: "http://app-node-4:5000"
+          - url: "http://app-node-5:5000"

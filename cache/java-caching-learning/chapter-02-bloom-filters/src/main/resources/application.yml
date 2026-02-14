@@ -1,0 +1,72 @@
+spring:
+  application:
+    name: chapter-02-bloom-filters
+
+  datasource:
+    url: jdbc:postgresql://localhost:5432/caching_db
+    username: cache_user
+    password: cache_password
+    driver-class-name: org.postgresql.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    show-sql: false
+
+  data:
+    redis:
+      host: localhost
+      port: 6379
+      timeout: 2000ms
+
+  cache:
+    type: redis
+
+# Cache configuration
+cache:
+  products:
+    ttl: 60
+
+# Bloom filter configuration
+bloom:
+  type: memory  # 'memory' for Guava, 'redis' for RedisBloom
+  expected-insertions: 100000
+  false-positive-rate: 0.01
+  rebuild-cron: "0 0 3 * * *"  # 3 AM daily
+  redis:
+    key: products-bloom-filter
+
+# Actuator endpoints
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,prometheus,metrics
+  endpoint:
+    health:
+      show-details: always
+
+# Logging
+logging:
+  level:
+    com.learning.cache: DEBUG
+
+server:
+  port: 8082
+
+---
+# Docker profile
+spring:
+  config:
+    activate:
+      on-profile: docker
+
+  datasource:
+    url: jdbc:postgresql://postgres:5432/caching_db
+
+  data:
+    redis:
+      host: redis
+
+bloom:
+  type: redis  # Use RedisBloom in Docker

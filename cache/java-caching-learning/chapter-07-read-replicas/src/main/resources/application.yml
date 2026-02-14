@@ -1,0 +1,60 @@
+spring:
+  application:
+    name: chapter-07-read-replicas
+
+  datasource:
+    url: jdbc:postgresql://localhost:5432/caching_db
+    username: cache_user
+    password: cache_password
+    driver-class-name: org.postgresql.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    show-sql: false
+
+  data:
+    redis:
+      host: localhost
+      port: 6379
+
+# Read replica configuration
+replicas:
+  nodes:
+    - host: localhost
+      port: 6380
+    - host: localhost
+      port: 6381
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,prometheus,metrics
+
+logging:
+  level:
+    com.learning.cache: DEBUG
+
+server:
+  port: 8087
+
+---
+spring:
+  config:
+    activate:
+      on-profile: docker
+
+  datasource:
+    url: jdbc:postgresql://postgres:5432/caching_db
+
+  data:
+    redis:
+      host: redis
+
+replicas:
+  nodes:
+    - host: redis-replica-1
+      port: 6379
+    - host: redis-replica-2
+      port: 6379

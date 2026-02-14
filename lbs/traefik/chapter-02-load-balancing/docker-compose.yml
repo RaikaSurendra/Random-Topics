@@ -1,0 +1,109 @@
+# =============================================================================
+# Chapter 02: Load Balancing with 5 App Nodes
+# =============================================================================
+# This setup demonstrates:
+# - Load balancing across multiple instances
+# - Health checks for automatic failover
+# - Sticky sessions for session persistence
+# - Detailed logging for monitoring
+# =============================================================================
+
+services:
+  # ---------------------------------------------------------------------------
+  # Traefik - Load Balancer (File-based configuration)
+  # ---------------------------------------------------------------------------
+  traefik:
+    image: traefik:v3.0
+    container_name: traefik-lb
+    ports:
+      - "80:80"
+      - "8080:8080"
+    volumes:
+      - ./traefik.yml:/etc/traefik/traefik.yml:ro
+      - ./dynamic.yml:/etc/traefik/dynamic.yml:ro
+    networks:
+      - traefik-lb-net
+    healthcheck:
+      test: ["CMD", "traefik", "healthcheck", "--ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+  # ---------------------------------------------------------------------------
+  # Application Nodes (5 instances with distinct identities)
+  # ---------------------------------------------------------------------------
+
+  # Node 1 - Blue
+  app-node-1:
+    build:
+      context: ../app
+      dockerfile: Dockerfile
+    container_name: app-node-1
+    hostname: app-node-1
+    environment:
+      - INSTANCE_ID=node-1
+      - INSTANCE_COLOR=#3498db
+      - PORT=5000
+    networks:
+      - traefik-lb-net
+
+  # Node 2 - Green
+  app-node-2:
+    build:
+      context: ../app
+      dockerfile: Dockerfile
+    container_name: app-node-2
+    hostname: app-node-2
+    environment:
+      - INSTANCE_ID=node-2
+      - INSTANCE_COLOR=#2ecc71
+      - PORT=5000
+    networks:
+      - traefik-lb-net
+
+  # Node 3 - Yellow
+  app-node-3:
+    build:
+      context: ../app
+      dockerfile: Dockerfile
+    container_name: app-node-3
+    hostname: app-node-3
+    environment:
+      - INSTANCE_ID=node-3
+      - INSTANCE_COLOR=#f1c40f
+      - PORT=5000
+    networks:
+      - traefik-lb-net
+
+  # Node 4 - Orange
+  app-node-4:
+    build:
+      context: ../app
+      dockerfile: Dockerfile
+    container_name: app-node-4
+    hostname: app-node-4
+    environment:
+      - INSTANCE_ID=node-4
+      - INSTANCE_COLOR=#e67e22
+      - PORT=5000
+    networks:
+      - traefik-lb-net
+
+  # Node 5 - Purple
+  app-node-5:
+    build:
+      context: ../app
+      dockerfile: Dockerfile
+    container_name: app-node-5
+    hostname: app-node-5
+    environment:
+      - INSTANCE_ID=node-5
+      - INSTANCE_COLOR=#9b59b6
+      - PORT=5000
+    networks:
+      - traefik-lb-net
+
+networks:
+  traefik-lb-net:
+    name: traefik-lb-net
+    driver: bridge

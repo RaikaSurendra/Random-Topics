@@ -1,0 +1,67 @@
+spring:
+  application:
+    name: chapter-04-distributed-patterns
+
+  datasource:
+    url: jdbc:postgresql://localhost:5432/caching_db
+    username: cache_user
+    password: cache_password
+    driver-class-name: org.postgresql.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    show-sql: false
+
+  data:
+    redis:
+      host: localhost
+      port: 6379
+
+# Distributed cache configuration
+distributed:
+  nodes: localhost:6379,localhost:6380,localhost:6381
+  virtual-nodes: 150
+
+# Resilience4j circuit breaker
+resilience4j:
+  circuitbreaker:
+    instances:
+      default:
+        register-health-indicator: true
+        sliding-window-size: 10
+        minimum-number-of-calls: 5
+        failure-rate-threshold: 50
+        wait-duration-in-open-state: 30s
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,prometheus,metrics
+  endpoint:
+    health:
+      show-details: always
+
+logging:
+  level:
+    com.learning.cache: DEBUG
+
+server:
+  port: 8084
+
+---
+spring:
+  config:
+    activate:
+      on-profile: docker
+
+  datasource:
+    url: jdbc:postgresql://postgres:5432/caching_db
+
+  data:
+    redis:
+      host: redis
+
+distributed:
+  nodes: redis:6379,redis-replica-1:6379,redis-replica-2:6379

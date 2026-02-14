@@ -13,6 +13,8 @@ No roadmap. No backlog. No sprint planning. Just vibes and `git push`.
 | **`cellar-cask/`** | Homebrew source build guides + the entire jq 1.8.1 source tree | Because reading `man jq` wasn't enough. Had to see how the sausage is made. Yes, all 298,760 lines of it. |
 | **`rg/`** | Ripgrep & sd tutorial with a full Go webshop codebase to practice on | Wrote an entire fake e-commerce backend just to have something to `rg --type go` through. Totally normal behavior. |
 | **`uuid7/`** | UUID v7 deep dive with Postgres benchmarks and database internals docs | Spent a weekend proving that time-sortable UUIDs are faster. Nobody at work cared. The benchmarks don't lie though. |
+| **`cache/`** | Java caching patterns — Spring Boot, Redis, Postgres, RabbitMQ, the whole circus | Because "just use Redis" is what people say when they've never debugged a cache stampede at 3 AM. Now there's a whole learning project about it with Docker Compose and everything. |
+| **`lbs/`** | Load balancer deep dive — Pingora, Traefik, and a scratch-built custom LB | Wasn't satisfied understanding load balancers conceptually. Had to build one from scratch AND dissect two production-grade ones. Perfectly reasonable use of a weekend. |
 
 ## Previously buried here (RIP)
 

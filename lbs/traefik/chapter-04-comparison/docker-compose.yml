@@ -1,0 +1,123 @@
+version: "3.8"
+
+# =============================================================================
+# Chapter 04: Traefik vs Nginx Side-by-Side Comparison
+# =============================================================================
+# This setup runs BOTH Traefik and Nginx simultaneously for comparison
+# - Traefik: Port 8000 (app), Port 8081 (dashboard)
+# - Nginx: Port 8001 (app), Port 8082 (status)
+# =============================================================================
+
+services:
+  # ---------------------------------------------------------------------------
+  # TRAEFIK SETUP
+  # ---------------------------------------------------------------------------
+  traefik:
+    image: traefik:v3.0
+    container_name: traefik-compare
+    command:
+      - "--api.dashboard=true"
+      - "--api.insecure=true"
+      - "--entrypoints.web.address=:80"
+      - "--providers.docker=true"
+      - "--providers.docker.exposedbydefault=false"
+      - "--providers.docker.network=comparison-net"
+      - "--log.level=INFO"
+      - "--accesslog=true"
+      - "--accesslog.format=json"
+      # Metrics for comparison
+      - "--metrics.prometheus=true"
+
+    ports:
+      - "8000:80"     # App traffic
+      - "8081:8080"   # Dashboard
+
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+
+    networks:
+      - comparison-net
+
+  # ---------------------------------------------------------------------------
+  # NGINX SETUP
+  # ---------------------------------------------------------------------------
+  nginx:
+    image: nginx:alpine
+    container_name: nginx-compare
+    ports:
+      - "8001:80"     # App traffic
+      - "8082:8082"   # Status page
+
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+
+    networks:
+      - comparison-net
+
+    depends_on:
+      - app-1
+      - app-2
+      - app-3
+
+  # ---------------------------------------------------------------------------
+  # BACKEND SERVICES (Shared by both Traefik and Nginx)
+  # ---------------------------------------------------------------------------
+
+  app-1:
+    build:
+      context: ../app
+      dockerfile: Dockerfile
+    container_name: app-compare-1
+    hostname: app-compare-1
+    environment:
+      - INSTANCE_ID=compare-node-1
+      - INSTANCE_COLOR=#3498db
+    networks:
+      - comparison-net
+    labels:
+      # Traefik configuration
+      - "traefik.enable=true"
+      - "traefik.http.routers.app-compare.rule=Host(`localhost`)"
+      - "traefik.http.routers.app-compare.entrypoints=web"
+      - "traefik.http.services.app-compare.loadbalancer.server.port=5000"
+      - "traefik.http.services.app-compare.loadbalancer.healthcheck.path=/health"
+      - "traefik.http.services.app-compare.loadbalancer.healthcheck.interval=5s"
+
+  app-2:
+    build:
+      context: ../app
+      dockerfile: Dockerfile
+    container_name: app-compare-2
+    hostname: app-compare-2
+    environment:
+      - INSTANCE_ID=compare-node-2
+      - INSTANCE_COLOR=#2ecc71
+    networks:
+      - comparison-net
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.app-compare.rule=Host(`localhost`)"
+      - "traefik.http.routers.app-compare.entrypoints=web"
+      - "traefik.http.services.app-compare.loadbalancer.server.port=5000"
+
+  app-3:
+    build:
+      context: ../app
+      dockerfile: Dockerfile
+    container_name: app-compare-3
+    hostname: app-compare-3
+    environment:
+      - INSTANCE_ID=compare-node-3
+      - INSTANCE_COLOR=#e74c3c
+    networks:
+      - comparison-net
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.app-compare.rule=Host(`localhost`)"
+      - "traefik.http.routers.app-compare.entrypoints=web"
+      - "traefik.http.services.app-compare.loadbalancer.server.port=5000"
+
+networks:
+  comparison-net:
+    name: comparison-net
+    driver: bridge

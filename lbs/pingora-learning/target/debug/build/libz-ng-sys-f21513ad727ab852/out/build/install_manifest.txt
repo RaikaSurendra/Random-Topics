@@ -1,0 +1,9 @@
+/Users/surendraraika/projects/learning/lbs/pingora-learning/target/debug/build/libz-ng-sys-f21513ad727ab852/out/lib/libz-ng.a
+/Users/surendraraika/projects/learning/lbs/pingora-learning/target/debug/build/libz-ng-sys-f21513ad727ab852/out/include/zlib-ng.h
+/Users/surendraraika/projects/learning/lbs/pingora-learning/target/debug/build/libz-ng-sys-f21513ad727ab852/out/include/zlib_name_mangling-ng.h
+/Users/surendraraika/projects/learning/lbs/pingora-learning/target/debug/build/libz-ng-sys-f21513ad727ab852/out/include/zconf-ng.h
+/Users/surendraraika/projects/learning/lbs/pingora-learning/target/debug/build/libz-ng-sys-f21513ad727ab852/out/lib/pkgconfig/zlib-ng.pc
+/Users/surendraraika/projects/learning/lbs/pingora-learning/target/debug/build/libz-ng-sys-f21513ad727ab852/out/lib/cmake/zlib-ng/zlib-ng.cmake
+/Users/surendraraika/projects/learning/lbs/pingora-learning/target/debug/build/libz-ng-sys-f21513ad727ab852/out/lib/cmake/zlib-ng/zlib-ng-debug.cmake
+/Users/surendraraika/projects/learning/lbs/pingora-learning/target/debug/build/libz-ng-sys-f21513ad727ab852/out/lib/cmake/zlib-ng/zlib-ng-config.cmake
+/Users/surendraraika/projects/learning/lbs/pingora-learning/target/debug/build/libz-ng-sys-f21513ad727ab852/out/lib/cmake/zlib-ng/zlib-ng-config-version.cmake

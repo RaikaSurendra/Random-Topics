@@ -1,0 +1,215 @@
+version: '3.8'
+
+# Load environment variables from .env file
+# Override with .env.docker when running all services in Docker
+
+services:
+  # PostgreSQL - Source of truth
+  postgres:
+    image: postgres:15-alpine
+    container_name: cache-postgres
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-caching_db}
+      POSTGRES_USER: ${POSTGRES_USER:-cache_user}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-cache_password}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./init-scripts:/docker-entrypoint-initdb.d
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U cache_user -d caching_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - cache-network
+
+  # Redis Stack - Primary cache with RedisBloom support
+  redis:
+    image: redis/redis-stack:latest
+    container_name: cache-redis
+    ports:
+      - "6379:6379"
+      - "8001:8001"  # RedisInsight UI
+    volumes:
+      - redis_data:/data
+    environment:
+      - REDIS_ARGS=--appendonly yes
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - cache-network
+
+  # Redis Replica 1
+  redis-replica-1:
+    image: redis:7-alpine
+    container_name: cache-redis-replica-1
+    command: redis-server --replicaof redis 6379 --appendonly yes
+    ports:
+      - "6380:6379"
+    volumes:
+      - redis_replica1_data:/data
+    depends_on:
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - cache-network
+
+  # Redis Replica 2
+  redis-replica-2:
+    image: redis:7-alpine
+    container_name: cache-redis-replica-2
+    command: redis-server --replicaof redis 6379 --appendonly yes
+    ports:
+      - "6381:6379"
+    volumes:
+      - redis_replica2_data:/data
+    depends_on:
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - cache-network
+
+  # RabbitMQ - Event messaging for cache invalidation
+  rabbitmq:
+    image: rabbitmq:3-management-alpine
+    container_name: cache-rabbitmq
+    environment:
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER:-cache_user}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD:-cache_password}
+    ports:
+      - "5672:5672"   # AMQP
+      - "15672:15672" # Management UI
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+    networks:
+      - cache-network
+
+  # NGINX - HTTP caching proxy
+  nginx:
+    build:
+      context: ./nginx
+      dockerfile: Dockerfile
+    container_name: cache-nginx
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - nginx_cache:/var/cache/nginx
+    depends_on:
+      - app
+    healthcheck:
+      test: ["CMD", "nginx", "-t"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    networks:
+      - cache-network
+
+  # Spring Boot Application
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: cache-app
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/caching_db
+      SPRING_DATASOURCE_USERNAME: cache_user
+      SPRING_DATASOURCE_PASSWORD: cache_password
+      SPRING_DATA_REDIS_HOST: redis
+      SPRING_DATA_REDIS_PORT: 6379
+      SPRING_RABBITMQ_HOST: rabbitmq
+      SPRING_RABBITMQ_PORT: 5672
+      SPRING_RABBITMQ_USERNAME: cache_user
+      SPRING_RABBITMQ_PASSWORD: cache_password
+      REDIS_REPLICA_1_HOST: redis-replica-1
+      REDIS_REPLICA_1_PORT: 6379
+      REDIS_REPLICA_2_HOST: redis-replica-2
+      REDIS_REPLICA_2_PORT: 6379
+    ports:
+      - "8080:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+    networks:
+      - cache-network
+
+  # Prometheus - Metrics collection
+  prometheus:
+    image: prom/prometheus:v2.48.0
+    container_name: cache-prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus_data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.enable-lifecycle'
+    depends_on:
+      - app
+    networks:
+      - cache-network
+
+  # Grafana - Dashboards
+  grafana:
+    image: grafana/grafana:10.2.3
+    container_name: cache-grafana
+    environment:
+      GF_SECURITY_ADMIN_USER: ${GRAFANA_USER:-admin}
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_PASSWORD:-admin}
+      GF_USERS_ALLOW_SIGN_UP: false
+    ports:
+      - "3000:3000"
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./grafana/dashboards:/etc/grafana/provisioning/dashboards:ro
+      - ./grafana/datasources:/etc/grafana/provisioning/datasources:ro
+    depends_on:
+      - prometheus
+    networks:
+      - cache-network
+
+volumes:
+  postgres_data:
+  redis_data:
+  redis_replica1_data:
+  redis_replica2_data:
+  rabbitmq_data:
+  nginx_cache:
+  prometheus_data:
+  grafana_data:
+
+networks:
+  cache-network:
+    driver: bridge

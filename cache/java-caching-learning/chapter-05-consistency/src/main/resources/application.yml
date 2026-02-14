@@ -1,0 +1,60 @@
+spring:
+  application:
+    name: chapter-05-consistency
+
+  datasource:
+    url: jdbc:postgresql://localhost:5432/caching_db
+    username: cache_user
+    password: cache_password
+    driver-class-name: org.postgresql.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    show-sql: false
+
+  data:
+    redis:
+      host: localhost
+      port: 6379
+
+  rabbitmq:
+    host: localhost
+    port: 5672
+    username: cache_user
+    password: cache_password
+
+# Consistency configuration
+consistency:
+  write-behind:
+    batch-size: 100
+    flush-interval: 5000
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,prometheus,metrics
+
+logging:
+  level:
+    com.learning.cache: DEBUG
+
+server:
+  port: 8085
+
+---
+spring:
+  config:
+    activate:
+      on-profile: docker
+
+  datasource:
+    url: jdbc:postgresql://postgres:5432/caching_db
+
+  data:
+    redis:
+      host: redis
+
+  rabbitmq:
+    host: rabbitmq

@@ -1,0 +1,80 @@
+version: "3.8"
+
+# =============================================================================
+# Chapter 01: Traefik Basics
+# =============================================================================
+# This setup introduces the fundamental concepts of Traefik:
+# - Entry Points (where traffic enters)
+# - Routers (how traffic is directed)
+# - Services (where traffic goes)
+# =============================================================================
+
+services:
+  # ---------------------------------------------------------------------------
+  # Traefik - The Reverse Proxy
+  # ---------------------------------------------------------------------------
+  traefik:
+    image: traefik:v3.0
+    container_name: traefik-basics
+    command:
+      # Enable API and Dashboard
+      - "--api.dashboard=true"
+      - "--api.insecure=true"  # Dashboard without auth (dev only!)
+
+      # Entry Points
+      - "--entrypoints.web.address=:80"
+
+      # Docker Provider
+      - "--providers.docker=true"
+      - "--providers.docker.exposedbydefault=false"
+      - "--providers.docker.network=traefik-basics-net"
+
+      # Logging - Key for learning!
+      - "--log.level=INFO"
+      - "--accesslog=true"
+      - "--accesslog.format=common"
+
+    ports:
+      - "80:80"       # HTTP traffic
+      - "8080:8080"   # Dashboard
+
+    volumes:
+      # Docker socket for service discovery
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+
+    networks:
+      - traefik-basics-net
+
+    labels:
+      - "traefik.enable=true"
+
+  # ---------------------------------------------------------------------------
+  # Sample Application
+  # ---------------------------------------------------------------------------
+  app:
+    build:
+      context: ../app
+      dockerfile: Dockerfile
+    container_name: app-basic
+    environment:
+      - INSTANCE_ID=basic-1
+      - INSTANCE_COLOR=#3498db
+
+    networks:
+      - traefik-basics-net
+
+    labels:
+      # Enable Traefik for this service
+      - "traefik.enable=true"
+
+      # Router configuration
+      - "traefik.http.routers.app.rule=Host(`localhost`)"
+      - "traefik.http.routers.app.entrypoints=web"
+
+      # Service configuration
+      - "traefik.http.services.app.loadbalancer.server.port=5000"
+
+networks:
+  traefik-basics-net:
+    name: traefik-basics-net
+    driver: bridge

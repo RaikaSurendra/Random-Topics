@@ -1,0 +1,15 @@
+prefix=/Users/surendraraika/projects/learning/lbs/pingora-learning/target/release/build/libz-ng-sys-eb76b9da87a4b74a/out
+exec_prefix=${prefix}
+symbol_prefix=
+bindir=${exec_prefix}/bin
+libdir=${exec_prefix}/lib
+sharedlibdir=${libdir}
+includedir=${prefix}/include
+
+Name: zlib-ng
+Description: zlib-ng compression library
+Version: 2.2.5
+
+Requires:
+Libs: -L${libdir} -L${sharedlibdir} -lz-ng
+Cflags: -I${includedir} -DWITH_GZFILEOP

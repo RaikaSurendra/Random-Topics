@@ -1,0 +1,9 @@
+/Users/surendraraika/projects/learning/lbs/pingora-learning/target/debug/build/libz-ng-sys-f21513ad727ab852/out/build/CMakeFiles/zlib.dir
+/Users/surendraraika/projects/learning/lbs/pingora-learning/target/debug/build/libz-ng-sys-f21513ad727ab852/out/build/CMakeFiles/package.dir
+/Users/surendraraika/projects/learning/lbs/pingora-learning/target/debug/build/libz-ng-sys-f21513ad727ab852/out/build/CMakeFiles/package_source.dir
+/Users/surendraraika/projects/learning/lbs/pingora-learning/target/debug/build/libz-ng-sys-f21513ad727ab852/out/build/CMakeFiles/edit_cache.dir
+/Users/surendraraika/projects/learning/lbs/pingora-learning/target/debug/build/libz-ng-sys-f21513ad727ab852/out/build/CMakeFiles/rebuild_cache.dir
+/Users/surendraraika/projects/learning/lbs/pingora-learning/target/debug/build/libz-ng-sys-f21513ad727ab852/out/build/CMakeFiles/list_install_components.dir
+/Users/surendraraika/projects/learning/lbs/pingora-learning/target/debug/build/libz-ng-sys-f21513ad727ab852/out/build/CMakeFiles/install.dir
+/Users/surendraraika/projects/learning/lbs/pingora-learning/target/debug/build/libz-ng-sys-f21513ad727ab852/out/build/CMakeFiles/install/local.dir
+/Users/surendraraika/projects/learning/lbs/pingora-learning/target/debug/build/libz-ng-sys-f21513ad727ab852/out/build/CMakeFiles/install/strip.dir
