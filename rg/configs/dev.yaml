@@ -1,0 +1,44 @@
+# Development Configuration
+# This file contains settings for local development.
+# Do NOT use these values in production.
+
+server:
+  host: "localhost"
+  port: 8080
+  read_timeout: 30s
+  write_timeout: 30s
+  idle_timeout: 120s
+  # TODO: Add graceful shutdown timeout
+  # TODO: Add TLS support for local HTTPS testing
+
+database:
+  host: "localhost"
+  port: 5432
+  name: "webshop_dev"
+  user: "devuser"
+  password: "devpass123"  # FIXME: Use env variable instead of hardcoded password
+  sslmode: "disable"
+  max_open_conns: 25
+  max_idle_conns: 5
+  conn_max_lifetime: 300s
+
+auth:
+  jwt_secret: "dev-secret-key-change-me"  # HACK: Hardcoded for dev only
+  token_expiry: "24h"
+  refresh_expiry: "168h"
+  bcrypt_cost: 10
+
+logging:
+  level: "debug"
+  format: "text"
+  output: "stdout"
+  # NOTE: Use "json" format in staging/prod for structured logging
+
+features:
+  enable_cache: false
+  enable_rate_limit: false
+  enable_cors: true
+  enable_metrics: false
+  allowed_origins:
+    - "http://localhost:3000"
+    - "http://localhost:5173"

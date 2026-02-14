@@ -1,0 +1,28 @@
+# Go build artifacts
+bin/
+*.exe
+*.dll
+*.so
+*.dylib
+
+# Go test and coverage
+*.test
+*.out
+coverage.html
+
+# Dependencies
+vendor/
+
+# Environment and secrets
+.env
+.env.local
+!.env.example
+
+# Logs and temp files
+*.log
+*.tmp
+
+# IDE
+.idea/
+.vscode/
+*.swp

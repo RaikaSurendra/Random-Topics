@@ -1,0 +1,66 @@
+# Docker Compose for rg-sd-mastery webshop
+# Usage:
+#   docker compose up --build                    # Local only (localhost:9090)
+#   docker compose --profile tunnel up --build   # With ngrok tunnel for students
+
+services:
+  # PostgreSQL database
+  db:
+    image: postgres:16-alpine
+    container_name: webshop-db
+    environment:
+      POSTGRES_DB: webshop_dev
+      POSTGRES_USER: devuser
+      POSTGRES_PASSWORD: devpass123  # FIXME: Use Docker secrets in production
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./scripts/migrate.sql:/docker-entrypoint-initdb.d/01-migrate.sql
+      - ./scripts/seed.sql:/docker-entrypoint-initdb.d/02-seed.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U devuser -d webshop_dev"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  # Go webshop API
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: webshop-app
+    ports:
+      - "9090:8080"
+    environment:
+      - APP_ENV=dev
+      - DB_HOST=db
+      - DB_PORT=5432
+      - DB_NAME=webshop_dev
+      - DB_USER=devuser
+      - DB_PASSWORD=devpass123
+      - JWT_SECRET=dev-secret-key-change-me  # HACK: Hardcoded for dev
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: unless-stopped
+
+  # ngrok tunnel - exposes the API publicly for students
+  # Activate with: docker compose --profile tunnel up --build
+  # Get your free authtoken at https://dashboard.ngrok.com/signup
+  ngrok:
+    image: ngrok/ngrok:latest
+    container_name: webshop-ngrok
+    profiles:
+      - tunnel
+    environment:
+      - NGROK_AUTHTOKEN=${NGROK_AUTHTOKEN:-}  # Set in .env or export before running
+    command: http app:8080 --log stdout
+    ports:
+      - "4040:4040"  # ngrok inspection UI (http://localhost:4040)
+    depends_on:
+      - app
+    restart: unless-stopped
+
+volumes:
+  pgdata:

@@ -1,0 +1,51 @@
+# Production Configuration
+# WARNING: Sensitive values should be injected via environment variables.
+# This file provides structure and non-sensitive defaults only.
+
+server:
+  host: "0.0.0.0"
+  port: 443
+  read_timeout: 15s
+  write_timeout: 15s
+  idle_timeout: 60s
+  shutdown_timeout: 30s
+  tls_cert: "/etc/ssl/certs/webshop.crt"
+  tls_key: "/etc/ssl/private/webshop.key"
+
+database:
+  host: "${DB_HOST}"           # FIXME: Ensure env var is set in deployment
+  port: 5432
+  name: "webshop_prod"
+  user: "${DB_USER}"
+  password: "${DB_PASSWORD}"   # NOTE: Injected from Vault/Secrets Manager
+  sslmode: "require"
+  max_open_conns: 100
+  max_idle_conns: 25
+  conn_max_lifetime: 180s
+
+auth:
+  jwt_secret: "${JWT_SECRET}"  # NOTE: Must be at least 256 bits
+  token_expiry: "1h"
+  refresh_expiry: "72h"
+  bcrypt_cost: 14
+
+logging:
+  level: "info"
+  format: "json"
+  output: "/var/log/webshop/app.log"
+  # TODO: Add log rotation configuration
+  # TODO: Ship logs to ELK/Datadog
+
+features:
+  enable_cache: true
+  enable_rate_limit: true
+  enable_cors: true
+  enable_metrics: true
+  allowed_origins:
+    - "https://webshop.example.com"
+    - "https://admin.webshop.example.com"
+
+# DEPRECATED: The old 'redis' section has moved to 'cache' as of v2.0
+# redis:
+#   host: "redis-prod.internal"
+#   port: 6379

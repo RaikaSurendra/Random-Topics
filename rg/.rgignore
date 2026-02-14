@@ -1,0 +1,35 @@
+# ripgrep ignore file for the rg+sd learning project
+# These patterns exclude files/directories from rg searches by default.
+# Override with: rg --no-ignore <pattern>
+
+# Version control
+.git/
+
+# Go vendored dependencies
+vendor/
+
+# Node.js dependencies (if any frontend tooling is added)
+node_modules/
+
+# Build output
+bin/
+dist/
+
+# Log files
+*.log
+
+# Temporary files
+*.tmp
+*.swp
+*.swo
+*~
+
+# Binary and compiled files
+*.exe
+*.dll
+*.so
+*.dylib
+
+# IDE and editor directories
+.idea/
+.vscode/

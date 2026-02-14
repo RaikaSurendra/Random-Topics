@@ -1,0 +1,36 @@
+# Test Configuration
+# Used by integration and unit tests. Designed for speed and isolation.
+
+server:
+  host: "127.0.0.1"
+  port: 0  # NOTE: Port 0 lets the OS assign a random available port
+  read_timeout: 5s
+  write_timeout: 5s
+  idle_timeout: 10s
+
+database:
+  # TODO: Switch to testcontainers for better parity with prod
+  driver: "sqlite"
+  name: ":memory:"
+  max_open_conns: 5
+  max_idle_conns: 2
+  conn_max_lifetime: 60s
+
+auth:
+  jwt_secret: "test-secret-not-for-production"  # HACK: Static key for deterministic tests
+  token_expiry: "5m"
+  refresh_expiry: "15m"
+  bcrypt_cost: 4  # NOTE: Low cost for faster test execution
+
+logging:
+  level: "error"
+  format: "text"
+  output: "stdout"
+
+features:
+  enable_cache: false
+  enable_rate_limit: false
+  enable_cors: false
+  enable_metrics: false
+  allowed_origins:
+    - "http://127.0.0.1:*"
